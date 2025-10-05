@@ -1,0 +1,8 @@
+{
+  "/dashboard/grama-niladhari/page": "app/dashboard/grama-niladhari/page.js",
+  "/dashboard/grama-niladhari/requests/page": "app/dashboard/grama-niladhari/requests/page.js",
+  "/dashboard/grama-niladhari/voters/page": "app/dashboard/grama-niladhari/voters/page.js",
+  "/page": "app/page.js",
+  "/elections/upcoming/page": "app/elections/upcoming/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
+}
