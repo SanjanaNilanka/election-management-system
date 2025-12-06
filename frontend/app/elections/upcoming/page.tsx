@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Vote, Calendar, MapPin, Users, ArrowLeft } from 'lucide-react'
+import { Vote, Calendar, MapPin, Users, ArrowLeft, Trophy, AlertCircle, Clock } from 'lucide-react'
 import Link from "next/link"
 import axios from 'axios';
+import { Progress } from '@radix-ui/react-progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 type Election = {
   id: string;
@@ -20,6 +22,8 @@ type Election = {
   districts: string[];
   expectedVoters: string;
   candidates: number;
+  votes?: any[];
+  candidatesData?: any[];
 };
 
 export default function UpcomingElectionsPage() {
@@ -37,6 +41,8 @@ export default function UpcomingElectionsPage() {
   const [elections, setElections] = useState<Election[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedElection, setSelectedElection] = useState<Election | null>(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -56,43 +62,119 @@ export default function UpcomingElectionsPage() {
       try {
         setIsLoading(true);
         const response = await axios.get('http://localhost:5000/api/elections');
-        interface ApiElection {
-          _id: string;
-          title: string;
-          description: string;
-          start: {
-            date: string;
-          };
-          type: string;
-          status: string;
-          level: string;
-          district?: string;
-          candidates: unknown[];
-        }
-
-        const fetchedElections: Election[] = (response.data as ApiElection[]).map((election: ApiElection): Election => ({
-          id: election._id,
-          title: election.title,
-          description: election.description,
-          date: election.start.date,
-          registrationDeadline: new Date(election.start.date).setDate(new Date(election.start.date).getDate() - 30), // Assuming 30 days before election
-          type: election.type.charAt(0).toUpperCase() + election.type.slice(1),
-          status: election.status,
-          districts: election.level === 'district' ? [election.district ?? ''] : election.level === 'national' ? ['All Districts'] : [election.level],
-          expectedVoters: 'N/A', // Adjust if API provides this data
-          candidates: election.candidates.length
+        
+        const fetchedElections: Election[] = response.data.map((e: any) => ({
+          id: e._id,
+          title: e.title,
+          description: e.description,
+          date: e.start.date,
+          registrationDeadline: new Date(e.start.date).setDate(new Date(e.start.date).getDate() - 30),
+          type: e.type.charAt(0).toUpperCase() + e.type.slice(1),
+          status: e.status,
+          districts: e.level === 'district' ? [e.district ?? 'N/A'] : e.level === 'national' ? ['All Districts'] : [e.level],
+          expectedVoters: 'N/A',
+          candidates: e.candidates.length,
+          votes: e.votes,
+          candidatesData: e.candidates
         }));
         setElections(fetchedElections);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching elections:', error);
-        setError('Failed to load elections. Please try again later.');
+        setError('Failed to load elections.');
+      } finally {
         setIsLoading(false);
       }
     };
 
     fetchElections();
   }, []);
+
+  const openResults = (election: Election) => {
+    setSelectedElection(election);
+    setShowResultsModal(true);
+  }
+
+  const getResultsContent = () => {
+    if (!selectedElection) return null;
+
+    if (selectedElection.status === 'pending') {
+      return (
+        <div className="text-center py-12">
+          <Clock className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-blue-800">Election Not Started</h3>
+          <p className="text-gray-600 mt-4">Results will be available once voting begins.</p>
+        </div>
+      )
+    }
+
+    if (selectedElection.status === 'active') {
+      return (
+        <div className="text-center py-12">
+          <AlertCircle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-orange-800">Voting in Progress</h3>
+          <p className="text-gray-600 mt-4">Please wait until the election closes to view final results.</p>
+        </div>
+      )
+    }
+
+    // Closed → Show full results
+    const totalVotes = selectedElection.votes?.length || 0;
+    const results = selectedElection.candidatesData
+      ?.map((c: any) => ({
+        name: c.candidate.name,
+        party: c.party.name,
+        votes: c.votes || 0,
+        percentage: totalVotes > 0 ? (c.votes / totalVotes) * 100 : 0
+      }))
+      .sort((a: any, b: any) => b.votes - a.votes);
+
+    const winner = results?.[0];
+
+    return (
+      <div className="space-y-8">
+        {/* Winner Card */}
+        {winner && (
+          <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-4 border-yellow-400">
+            <CardContent className="py-10 text-center">
+              <Trophy className="h-24 w-24 text-yellow-600 mx-auto mb-6" />
+              <h2 className="text-4xl font-bold text-yellow-800">Winner!</h2>
+              <p className="text-3xl font-bold mt-6">{winner.name}</p>
+              <p className="text-2xl text-yellow-700">{winner.party}</p>
+              <p className="text-5xl font-bold text-yellow-600 mt-8">
+                {winner.votes.toLocaleString()} votes ({winner.percentage.toFixed(1)}%)
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Full Results */}
+        <div className="space-y-6">
+          <h3 className="text-2xl font-bold flex items-center gap-3">
+            <Users className="h-8 w-8 text-indigo-600" />
+            Final Results
+          </h3>
+          {results?.map((r: any, i: number) => (
+            <div key={i} className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl font-bold text-gray-400">#{i + 1}</span>
+                  <div>
+                    <p className="text-xl font-semibold">{r.name}</p>
+                    <p className="text-gray-600">{r.party}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{r.votes.toLocaleString()}</p>
+                  <p className="text-lg text-indigo-600">{r.percentage.toFixed(1)}%</p>
+                </div>
+              </div>
+              <Progress value={r.percentage} className="h-10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white">
@@ -258,19 +340,43 @@ export default function UpcomingElectionsPage() {
                         {lang === 'si' ? 'අපේක්ෂකයින් ' + election.candidates : lang === 'ta' ? 'வேட்பாளர்கள் ' + election.candidates :  election.candidates + ' Candidates ' }
                       </span>
                     </div>
-                    {election.status === 'active' && (
-                      <Button size="sm" asChild>
-                        <Link href="/auth/register">
-                          Register Now
-                        </Link>
+                    <div className="flex gap-3">
+                      {election.status === 'active' && (
+                        <Button size="sm" asChild>
+                          <Link href="/auth/register">Register Now</Link>
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openResults(election)}
+                      >
+                        View Results
                       </Button>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Results Modal */}
+        <Dialog open={showResultsModal} onOpenChange={setShowResultsModal}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">
+                {selectedElection?.title} - Results
+              </DialogTitle>
+              <DialogDescription>
+                {selectedElection?.description}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-6">
+              {getResultsContent()}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Call to Action */}
         <div className="mt-12 bg-indigo-600 rounded-lg p-8 text-white text-center">

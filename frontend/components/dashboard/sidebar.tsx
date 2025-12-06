@@ -38,7 +38,7 @@ export function Sidebar({ userRole }: SidebarProps) {
           // { icon: FileText, label: "Uploaded Documents", href: "/dashboard/grama-niladhari/documents" },
           { icon: BarChart3, label: "Reports", href: "/dashboard/grama-niladhari/reports" },
           // { icon: MessageSquare, label: "Messaging", href: "/dashboard/grama-niladhari/communication" },
-          { icon: Settings, label: "Settings", href: "/dashboard/grama-niladhari/settings" },
+          // { icon: Settings, label: "Settings", href: "/dashboard/grama-niladhari/settings" },
         ]
       case "election_commission":
         return [
@@ -53,7 +53,7 @@ export function Sidebar({ userRole }: SidebarProps) {
           { icon: BarChart3, label: "System Reports", href: "/dashboard/election-commission/reports" },
           // { icon: MessageSquare, label: "User Feedback", href: "/dashboard/election-commission/feedback" },
           // { icon: Bell, label: "Announcements", href: "/dashboard/election-commission/notifications" },
-          { icon: Settings, label: "Settings", href: "/dashboard/election-commission/settings" },
+          // { icon: Settings, label: "Settings", href: "/dashboard/election-commission/settings" },
         ]
       default:
         return []

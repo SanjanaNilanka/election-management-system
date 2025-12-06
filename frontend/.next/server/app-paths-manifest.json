@@ -1,11 +1,10 @@
 {
-  "/dashboard/election-commission/region/page": "app/dashboard/election-commission/region/page.js",
-  "/dashboard/election-commission/election/page": "app/dashboard/election-commission/election/page.js",
-  "/dashboard/election-commission/voter/page": "app/dashboard/election-commission/voter/page.js",
-  "/dashboard/election-commission/reports/page": "app/dashboard/election-commission/reports/page.js",
+  "/dashboard/citizen/page": "app/dashboard/citizen/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/citizen/voting/page": "app/dashboard/citizen/voting/page.js",
+  "/page": "app/page.js",
+  "/elections/upcoming/page": "app/elections/upcoming/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/dashboard/election-commission/ec-officials/page": "app/dashboard/election-commission/ec-officials/page.js",
-  "/dashboard/election-commission/gn-officials/page": "app/dashboard/election-commission/gn-officials/page.js",
   "/dashboard/election-commission/page": "app/dashboard/election-commission/page.js",
-  "/dashboard/election-commission/election/view/[id]/page": "app/dashboard/election-commission/election/view/[id]/page.js"
+  "/dashboard/election-commission/election/page": "app/dashboard/election-commission/election/page.js"
 }
