@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/page": [
+    "/dashboard/citizen/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/dashboard/citizen/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -11,40 +11,75 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/dashboard/citizen/voting/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/citizen/voting/page.js"
+    ],
+    "/dashboard/citizen/voter-reg/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/citizen/voter-reg/page.js"
+    ],
+    "/dashboard/citizen/profile/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/citizen/profile/page.js"
+    ],
+    "/dashboard/citizen/support/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/citizen/support/page.js"
+    ],
     "/auth/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/auth/login/page.js"
     ],
-    "/dashboard/citizen/page": [
+    "/dashboard/election-commission/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/citizen/page.js"
+      "static/chunks/app/dashboard/election-commission/page.js"
     ],
-    "/dashboard/grama-niladhari/page": [
+    "/dashboard/election-commission/gn-officials/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/grama-niladhari/page.js"
+      "static/chunks/app/dashboard/election-commission/gn-officials/page.js"
     ],
-    "/dashboard/grama-niladhari/requests/page": [
+    "/dashboard/election-commission/candidate/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/grama-niladhari/requests/page.js"
+      "static/chunks/app/dashboard/election-commission/candidate/page.js"
     ],
-    "/dashboard/grama-niladhari/voters/page": [
+    "/dashboard/election-commission/region/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/grama-niladhari/voters/page.js"
+      "static/chunks/app/dashboard/election-commission/region/page.js"
     ],
-    "/auth/register/page": [
+    "/dashboard/election-commission/reports/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/auth/register/page.js"
+      "static/chunks/app/dashboard/election-commission/reports/page.js"
     ],
-    "/elections/upcoming/page": [
+    "/dashboard/election-commission/voter/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/elections/upcoming/page.js"
+      "static/chunks/app/dashboard/election-commission/voter/page.js"
+    ],
+    "/dashboard/election-commission/election/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/election-commission/election/page.js"
+    ],
+    "/dashboard/election-commission/election/view/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/election-commission/election/view/[id]/page.js"
+    ],
+    "/dashboard/election-commission/ec-officials/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/election-commission/ec-officials/page.js"
     ]
   }
 }

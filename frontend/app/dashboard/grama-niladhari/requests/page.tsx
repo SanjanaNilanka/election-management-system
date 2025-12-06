@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { toast } from "@/components/ui/use-toast"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+
 
 export default function RegistrationRequestsPage() {
   const [voters, setVoters] = useState<any[]>([])
@@ -20,11 +22,36 @@ export default function RegistrationRequestsPage() {
   const [currentDocIndex, setCurrentDocIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
+  const { data: session } = useSession()
+  const userId = session?.user?.id
+  const [gramaNiladhari, setGramaNiladhari] = useState<any>(null)
+
   const API_BASE = "http://localhost:5000/api"
   const IMAGE_BASE = "http://localhost:5000"
 
+  const fetchGramaNiladhari = async () => {
+    if (!userId) return
+    try {
+      const res = await fetch(`${API_BASE}/gns/user/${userId}`)
+      const data = await res.json()
+      setGramaNiladhari(data)
+    } catch (err) {
+      console.error("Failed to fetch GN data")
+    }
+  }
+
+  useEffect(() => {
+    if (userId) fetchGramaNiladhari()
+  }, [userId])
+
   // Fetch pending voters
   const fetchData = async () => {
+    if (!gramaNiladhari?.gnDivision) {
+      setVoters([])
+      setFilteredVoters([])
+      setIsLoading(false)
+      return
+    }
     try {
       setIsLoading(true)
       const response = await fetch(`${API_BASE}/voter`)
@@ -32,7 +59,9 @@ export default function RegistrationRequestsPage() {
         throw new Error("Failed to fetch voters")
       }
       const data = await response.json()
-      const pendingVoters = Array.isArray(data) ? data.filter(v => v.status === 'pending') : []
+      const pendingVoters = Array.isArray(data) ? data.filter(v => v.status === 'pending' &&
+            v.gramaNiladhariDivision?.trim().toUpperCase() === 
+            gramaNiladhari.gnDivision.trim().toUpperCase()) : []
       setVoters(pendingVoters)
       setFilteredVoters(pendingVoters)
     } catch (error) {
@@ -49,8 +78,10 @@ export default function RegistrationRequestsPage() {
   }
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (gramaNiladhari?.gnDivision) {
+      fetchData()
+    }
+  }, [gramaNiladhari])
 
   // Filter voters
   useEffect(() => {
@@ -169,7 +200,7 @@ export default function RegistrationRequestsPage() {
     <DashboardLayout userRole="grama_niladhari">
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Registration Requests</h1>
+          <h1 className="text-2xl font-bold mb-2">Registration Requests - {gramaNiladhari?.gnDivision || "Loading..."}</h1>
           <p className="text-green-100">Review and approve voter registrations.</p>
         </div>
 

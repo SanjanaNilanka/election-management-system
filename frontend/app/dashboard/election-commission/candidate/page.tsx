@@ -359,8 +359,12 @@ export default function CandidateManagementPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {parties.map((p) => (
-                      <SelectItem key={p._id} value={p._id}>
-                        {p.name}
+                      <SelectItem key={p._id} value={p._id} >
+                        <div className="flex items-center gap-2">
+                          <img src={`http://localhost:5000${p.logoUrl}`} alt={p.name} className="h-5 w-5 rounded" />
+                          {p.name}
+                        </div>
+                       
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -384,7 +388,7 @@ export default function CandidateManagementPage() {
                 </Select>
               </div>
 
-              {formData.participatedFrom !== "national" && (
+              {/* {formData.participatedFrom !== "national" && (
                 <div>
                   <Label>Region</Label>
                   <Select value={formData.regionName} onValueChange={(value) => handleChange('regionName', value)}>
@@ -397,6 +401,111 @@ export default function CandidateManagementPage() {
                           {r.name}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )} */}
+
+              {formData.participatedFrom === "district" && (
+                <div>
+                  <Label>Region</Label>
+                  <Select value={formData.regionName} onValueChange={(value) => handleChange('regionName', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.filter((r: any) => r.type === "district").map((r) => (
+                        <SelectItem key={r._id} value={r._id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                      {regions.filter((r: any) => r.type === "district").length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">No district available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {formData.participatedFrom === "province" && (
+                <div>
+                  <Label>Region</Label>
+                  <Select value={formData.regionName} onValueChange={(value) => handleChange('regionName', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.filter((r: any) => r.type === "province").map((r) => (
+                        <SelectItem key={r._id} value={r._id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                      {regions.filter((r: any) => r.type === "province").length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">No province available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {formData.participatedFrom === "municipal" && (
+                <div>
+                  <Label>Region</Label>
+                  <Select value={formData.regionName} onValueChange={(value) => handleChange('regionName', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.filter((r: any) => r.type === "municipal").map((r) => (
+                        <SelectItem key={r._id} value={r._id}>  
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                      {regions.filter((r: any) => r.type === "municipal").length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">No municipal council available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {formData.participatedFrom === "urban" && (
+                <div>
+                  <Label>Region</Label>
+                  <Select value={formData.regionName} onValueChange={(value) => handleChange('regionName', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.filter((r: any) => r.type === "urban").map((r) => (
+                        <SelectItem key={r._id} value={r._id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                      {regions.filter((r: any) => r.type === "urban").length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">No urban council available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {formData.participatedFrom === "pradeshiya-sabha" && (
+                <div>
+                  <Label>Region</Label>
+                  <Select value={formData.regionName} onValueChange={(value) => handleChange('regionName', value)}> 
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.filter((r: any) => r.type === "pradeshiya-sabha").map((r) => (
+                        <SelectItem key={r._id} value={r._id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                      {regions.filter((r: any) => r.type === "pradeshiya-sabha").length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">No pradeshiya sabha available</div>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

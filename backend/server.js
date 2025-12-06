@@ -10,6 +10,7 @@ const candidateRoutes = require('./routes/candidateRoutes');
 const partyRoutes = require('./routes/partyRoutes');
 const regionRoutes = require('./routes/regionRoutes');
 const voteRoutes = require('./routes/voteRoutes');
+const GNRoutes = require('./routes/gn');
 const path = require('path');
 
 // Load environment variables
@@ -40,6 +41,7 @@ app.use('/api/candidates', candidateRoutes);
 app.use('/api/parties', partyRoutes);
 app.use('/api/regions', regionRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/gns', GNRoutes);
 
 app.get('/', (req, res) => {
     res.send('Election Management System API is running...');

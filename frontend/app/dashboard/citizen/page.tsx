@@ -5,124 +5,129 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
-import { Vote, User, Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Vote, Calendar, CheckCircle, AlertCircle, Clock, User } from 'lucide-react'
 import { useSession } from "next-auth/react"
 import Link from "next/link"
 import axios from "axios"
+import { format, formatDistanceToNow } from "date-fns"
 
 export default function CitizenDashboard() {
   const { data: session, status } = useSession()
+  const [voter, setVoter] = useState<any>(null)
+  const [elections, setElections] = useState<any[]>([])
+  const [votedElectionIds, setVotedElectionIds] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const [hasVoter, setHasVoter] = useState(false)
-  const [approvedVoter, setApprovedVoter] = useState(false)
-  const [regStatus, setRegStatus] = useState("")
+  const API_BASE = "http://localhost:5000/api"
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
-      axios
-        .get(`http://localhost:5000/api/voter/user/${session.user.id}`)
-        .then((res) => {
-          const voter = res.data;
-          setApprovedVoter(voter.approved);
-          if (voter.approved) {
-            setRegStatus("Approved");
-          } else {
-            setRegStatus("Pending");
-          }
-          setHasVoter(true);
-        })
-        .catch((err) => {
-          if (err.response?.status === 404) {
-            
-            setHasVoter(false);
-          }
-        });
+    const fetchData = async () => {
+      if (status !== "authenticated" || !session?.user?.id) return
+
+      try {
+        setIsLoading(true)
+        const [voterRes, electionsRes] = await Promise.all([
+          axios.get(`${API_BASE}/voter/user/${session.user.id}`).catch(() => null),
+          axios.get(`${API_BASE}/elections`)
+        ])
+
+        // Voter status
+        if (voterRes?.data) {
+          setVoter(voterRes.data)
+          const votedIds = voterRes.data.votes?.map((v: any) => v.election?._id || v.election) || []
+          setVotedElectionIds(votedIds)
+        }
+
+        // Elections
+        const allElections = Array.isArray(electionsRes.data) ? electionsRes.data : []
+        setElections(allElections)
+      } catch (err) {
+        console.error("Failed to load dashboard data")
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    fetchData()
   }, [session, status])
-  
+
+  // Find next active election
+  const nextElection = elections
+    .filter(e => e.status === 'active' && !votedElectionIds.includes(e._id))
+    .sort((a, b) => new Date(a.end.date).getTime() - new Date(b.end.date).getTime())[0]
+
+  const activeElectionsCount = elections.filter(e => 
+    e.status === 'active' && !votedElectionIds.includes(e._id)
+  ).length
 
   const stats = [
     {
       title: "Registration Status",
-      value: hasVoter ? regStatus : "Not Registered",
+      value: voter ? (voter.status === 'approved' ? "Approved" : "Pending Approval") : "Not Registered",
       icon: CheckCircle,
-      color: hasVoter ? (approvedVoter ? "text-green-600" : "text-yellow-600") : "text-red-600",
-      bgColor: hasVoter ? (approvedVoter ? "bg-green-100" : "bg-yellow-100") : "bg-red-100"
+      color: voter ? (voter.status === 'approved' ? "text-green-600" : "text-yellow-600") : "text-red-600",
+      bgColor: voter ? (voter.status === 'approved' ? "bg-green-100" : "bg-yellow-100") : "bg-red-100"
     },
     {
       title: "Next Election",
-      value: "N/A",
+      value: nextElection ? nextElection.title : "No active election",
+      subtitle: nextElection ? formatDistanceToNow(new Date(nextElection.end.date), { addSuffix: true }) : "",
       icon: Calendar,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100"
+      color: nextElection ? "text-blue-600" : "text-gray-500",
+      bgColor: nextElection ? "bg-blue-100" : "bg-gray-100"
     },
     {
       title: "Elections Voted",
-      value: "N/A",
+      value: votedElectionIds.length.toString(),
       icon: Vote,
       color: "text-indigo-600",
       bgColor: "bg-indigo-100"
     },
     {
-      title: "Pending Actions",
-      value: "N/A",
-      icon: AlertCircle,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100"
+      title: "Active Elections",
+      value: activeElectionsCount.toString(),
+      subtitle: activeElectionsCount > 0 ? "You can vote now" : "No voting open",
+      icon: Clock,
+      color: activeElectionsCount > 0 ? "text-orange-600" : "text-gray-500",
+      bgColor: activeElectionsCount > 0 ? "bg-orange-100" : "bg-gray-100"
     }
   ]
 
-  const upcomingElections = [
-    {
-      title: "N/A",
-      date: "2025-07-15",
-      status: "Registration Open",
-      canVote: true
-    },
-    {
-      title: "N/A",
-      date: "2025-04-20",
-      status: "Upcoming",
-      canVote: true
-    }
-  ]
-
-  const recentActivity = [
-    {
-      action: "N/A",
-      date: "2025-08-15",
-      type: "success"
-    },
-    {
-      action: "N/A",
-      date: "2025-08-10",
-      type: "info"
-    },
-    {
-      action: "N/A",
-      date: "2025-08-05",
-      type: "success"
-    }
-  ]
+  if (status === "loading" || isLoading) {
+    return (
+      <DashboardLayout userRole="citizen">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">Loading your dashboard...</p>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout userRole="citizen">
       <div className="space-y-6">
+        {/* Welcome Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">
-            Welcome back, {session && session.user ? session.user.name : "Citizen"}
+            Welcome back, {session?.user?.name || "Citizen"}!
           </h1>
-          {hasVoter ? (
+          {voter ? (
             <p className="text-indigo-100">
-              Your voter registration is {approvedVoter ? "approved. You can participate in upcoming elections." : "pending approval. Wait untill Grama Niladari approve the request"}.
+              {voter.status === 'approved' 
+                ? "You are fully registered and ready to vote in upcoming elections."
+                : "Your registration is under review. Please wait for Grama Niladhari approval."}
             </p>
           ) : (
             <p className="text-indigo-100">
-              You have not registered as a voter yet. Please complete your voter registration.
+              You are not registered as a voter yet. 
+              <Link href="/dashboard/citizen/register" className="underline ml-2">
+                Register now
+              </Link>
             </p>
           )}
         </div>
 
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
             <Card key={index}>
@@ -138,118 +143,109 @@ export default function CitizenDashboard() {
                 <div className={`text-2xl font-bold ${stat.color}`}>
                   {stat.value}
                 </div>
+                {stat.subtitle && (
+                  <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Vote className="h-5 w-5 text-indigo-600" />
-                <span>Upcoming Elections</span>
-              </CardTitle>
-              <CardDescription>
-                Elections you can participate in
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {upcomingElections.map((election, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{election.title}</h4>
-                    <p className="text-sm text-gray-500 flex items-center mt-1">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {new Date(election.date).toLocaleDateString()}
-                    </p>
-                    <Badge 
-                      variant={election.status === 'Registration Open' ? 'default' : 'default'}
-                      className="mt-2"
-                    >
-                      {election.status}
-                    </Badge>
-                  </div>
-                  {election.canVote && (
-                    <Button size="sm" asChild>
-                      <Link href="/dashboard/citizen/voting">
-                        Vote Now
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/citizen/voting">
-                  View All Elections
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Upcoming Elections */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Vote className="h-5 w-5 text-indigo-600" />
+              <span>Active Elections</span>
+            </CardTitle>
+            <CardDescription>
+              Elections you can participate in right now
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {activeElectionsCount === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Clock className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>No active elections at the moment</p>
+                <p className="text-sm mt-2">Check back later for upcoming elections</p>
+              </div>
+            ) : (
+              <>
+                {elections
+                  .filter(e => e.status === 'active' && !votedElectionIds.includes(e._id))
+                  .slice(0, 3)
+                  .map(election => (
+                    <div key={election._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{election.title}</h4>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Ends {format(new Date(election.end.date), "PPP 'at' p")}
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          <Badge variant="secondary">{election.type}</Badge>
+                          <Badge variant="outline" className="capitalize">{election.level}</Badge>
+                        </div>
+                      </div>
+                      <Button asChild>
+                        <Link href="/dashboard/citizen/voting">
+                          {votedElectionIds.includes(election._id) ? "Already Voted" : "Vote Now"}
+                        </Link>
+                      </Button>
+                    </div>
+                  ))}
+                {activeElectionsCount > 3 && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href="/dashboard/citizen/voting">
+                      View All {activeElectionsCount} Elections
+                    </Link>
+                  </Button>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-indigo-600" />
-                <span>Recent Activity</span>
-              </CardTitle>
-              <CardDescription>
-                Your recent actions and updates
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3">
-                  <div className={`p-1 rounded-full ${
-                    activity.type === 'success' ? 'bg-green-100' : 'bg-blue-100'
-                  }`}>
-                    <div className={`h-2 w-2 rounded-full ${
-                      activity.type === 'success' ? 'bg-green-600' : 'bg-blue-600'
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {activity.action}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(activity.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/citizen/notifications">
-                  View All Notifications
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>
-              Common tasks you might want to perform
+              Common tasks at your fingertips
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
+              {!voter ? (
+                <Button className="h-20 flex flex-col" asChild>
+                  <Link href="/dashboard/citizen/register">
+                    <CheckCircle className="h-6 w-6 mb-2" />
+                    <span>Register as Voter</span>
+                  </Link>
+                </Button>
+              ) : voter.status !== 'approved' ? (
+                <Button disabled className="h-20 flex flex-col opacity-60">
+                  <Clock className="h-6 w-6 mb-2" />
+                  <span>Waiting for Approval</span>
+                </Button>
+              ) : (
+                <Button variant="outline" className="h-20 flex flex-col" asChild>
+                  <Link href="/dashboard/citizen/voting">
+                    <Vote className="h-6 w-6 mb-2 text-indigo-600" />
+                    <span>Cast Your Vote</span>
+                  </Link>
+                </Button>
+              )}
+
+              <Button variant="outline" className="h-20 flex flex-col" asChild>
                 <Link href="/dashboard/citizen/profile">
-                  <User className="h-6 w-6" />
-                  <span>Update Profile</span>
+                  <User className="h-6 w-6 mb-2 text-green-600" />
+                  <span>View Profile</span>
                 </Link>
               </Button>
-              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
-                <Link href="/dashboard/citizen/voting">
-                  <Vote className="h-6 w-6" />
-                  <span>Cast Vote</span>
-                </Link>
-              </Button>
-              <Button variant="outline" className="h-20 flex flex-col space-y-2" asChild>
+
+              <Button variant="outline" className="h-20 flex flex-col" asChild>
                 <Link href="/dashboard/citizen/support">
-                  <AlertCircle className="h-6 w-6" />
+                  <AlertCircle className="h-6 w-6 mb-2 text-orange-600" />
                   <span>Get Help</span>
                 </Link>
               </Button>
@@ -259,4 +255,4 @@ export default function CitizenDashboard() {
       </div>
     </DashboardLayout>
   )
-} 
+}

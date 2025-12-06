@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Pencil, Trash2, Play, Square } from "lucide-react"
+import { Plus, Pencil, Trash2, Play, Square, Eye } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { toast } from "@/components/ui/use-toast"
 import { Calendar } from "@/components/ui/calendar"
@@ -334,6 +334,14 @@ export default function ElectionManagementPage() {
                             : 'N/A'}
                         </td>
                         <td className="p-2 flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.location.href = `/dashboard/election-commission/election/view/${e._id}`}
+                              title="View Results"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button
                             variant="outline"
                             size="sm"

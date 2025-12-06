@@ -23,8 +23,8 @@ const config: Config = {
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "#374151", // Gray
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#000000ff",
+          foreground: "#f6f6f6ff",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",

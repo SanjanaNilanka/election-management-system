@@ -15,14 +15,24 @@ exports.createElection = async (req, res) => {
   }
 };
 
+// controllers/electionController.js
 exports.getElections = async (req, res) => {
   try {
     const elections = await Election.find()
-      .populate('candidates.candidate')
-      .populate('candidates.party')
-      .populate('createdBy', 'name email');
+      .populate({
+        path: 'candidates.candidate',
+        populate: [
+          { path: 'currentParty' },     // Populate party
+          { path: 'regionName' }        // Populate region (district/province/local authority)
+        ]
+      })
+      .populate('candidates.party')     // This is redundant if you already populate currentParty above
+      .populate('createdBy', 'name email')
+      .lean();
+
     res.json(elections);
   } catch (error) {
+    console.error("Error fetching elections:", error);
     res.status(500).json({ message: error.message });
   }
 };

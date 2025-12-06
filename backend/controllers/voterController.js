@@ -4,7 +4,8 @@ const path = require('path');
 const toRelativePath = (file) => file ? path.relative(path.join(__dirname, '../'), file.path).replace(/\\/g, '/') : null;
 
 const registerVoterWithDocs = async (req, res) => {
-  const { userId, nic, phone, address, district, gramaNiladhariDivision } = req.body;
+  const { userId, nic, phone, address, province, district, gramaNiladhariDivision, localAuthority } = req.body;
+  const voterNumber = `VOTER-${Date.now()}`;
 
   try {
     const nicFrontPath = toRelativePath(req.files.nic_front?.[0]);
@@ -17,10 +18,13 @@ const registerVoterWithDocs = async (req, res) => {
       nic,
       phone,
       address,
+      province,
       district,
       gramaNiladhariDivision,
+      localAuthority,
       registered: true,
       status: 'pending',
+      voterNumber,
       nicFrontPath,
       nicBackPath,
       birthCertFrontPath,
@@ -41,7 +45,7 @@ const registerVoterWithDocs = async (req, res) => {
 // @route   POST /api/voter/register
 // @access  Public
 const registerVoter = async (req, res) => {
-    const { userId, nic, phone, address, district, gramaNiladhariDivision } = req.body;
+    const { userId, nic, phone, address, province, district, gramaNiladhariDivision } = req.body;
 
     try {
         const voter = await Voter.create({
@@ -49,6 +53,7 @@ const registerVoter = async (req, res) => {
             nic,
             phone,
             address,
+            province,
             district,
             gramaNiladhariDivision,
             status: 'pending'
@@ -152,7 +157,7 @@ const getVoterByUserId = async (req, res) => {
 // @access  Public
 const updateVoter = async (req, res) => {
     const { id } = req.params;
-    const { nic, phone, address, district, gramaNiladhariDivision, status, nicApproval, birthCertificateApproval, addressApproval } = req.body;
+    const { nic, phone, address, province, district, gramaNiladhariDivision, status, nicApproval, birthCertificateApproval, addressApproval } = req.body;
 
     try {
         const voter = await Voter.findById(id);
@@ -163,6 +168,7 @@ const updateVoter = async (req, res) => {
         voter.nic = nic || voter.nic;
         voter.phone = phone || voter.phone;
         voter.address = address || voter.address;
+        voter.province = province || voter.province;
         voter.district = district || voter.district;
         voter.gramaNiladhariDivision = gramaNiladhariDivision || voter.gramaNiladhariDivision;
         voter.status = status || voter.status;

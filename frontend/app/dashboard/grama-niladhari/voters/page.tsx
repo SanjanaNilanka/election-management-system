@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,8 +10,10 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { toast } from "@/components/ui/use-toast"
 import { Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { set } from "mongoose"
 
 export default function ApprovedVotersPage() {
+  const { data: session, status } = useSession()
   const [voters, setVoters] = useState<any[]>([])
   const [filteredVoters, setFilteredVoters] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -18,9 +21,31 @@ export default function ApprovedVotersPage() {
   const [openDetails, setOpenDetails] = useState(false)
   const [selectedVoter, setSelectedVoter] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [gramaNiladhari, setGramaNiladhari] = useState<any>(null)
+
+  const userId = session?.user?.id
 
   const API_BASE = "http://localhost:5000/api"
   const IMAGE_BASE = "http://localhost:5000"
+
+  useEffect(() => {
+    if (userId) {
+      fetchGramaNiladhari()
+    }
+  }, [userId])
+
+
+  const fetchGramaNiladhari = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/gns/user/${userId}`)
+      const data = await response.json()
+      console.log("userId:", userId)
+      console.log("Grama Niladhari Data:", data)
+      setGramaNiladhari(data)
+    } catch (error) {
+      return null
+    }
+  }
 
   // Fetch approved voters
   const fetchData = async () => {
@@ -29,8 +54,12 @@ export default function ApprovedVotersPage() {
       const response = await fetch(`${API_BASE}/voter`)
       const data = await response.json()
       const approvedVoters = Array.isArray(data) ? data.filter(v => v.status === 'approved') : []
-      setVoters(approvedVoters)
-      setFilteredVoters(approvedVoters)
+      const votersOfDivition = approvedVoters.filter(voter => voter.gramaNiladhariDivision.trim().toUpperCase() === gramaNiladhari?.gnDivision?.trim()?.toUpperCase())
+      console.log("Voter GN Division:", approvedVoters[0]?.gramaNiladhariDivision)
+      console.log("Current GN Division:", gramaNiladhari?.gnDivision)
+      console.log("All voters:", approvedVoters)
+      setVoters(votersOfDivition)
+      setFilteredVoters(votersOfDivition)
     } catch (error) {
       toast({
         variant: "destructive",
@@ -45,8 +74,10 @@ export default function ApprovedVotersPage() {
   }
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (gramaNiladhari?.gnDivision) {
+      fetchData()
+    }
+  }, [gramaNiladhari])
 
   // Filter voters
   useEffect(() => {
@@ -76,7 +107,7 @@ export default function ApprovedVotersPage() {
     <DashboardLayout userRole="grama_niladhari">
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Approved Voters</h1>
+          <h1 className="text-2xl font-bold mb-2">Approved Voters of {gramaNiladhari?.gnDivision}</h1>
           <p className="text-indigo-100">View and manage approved voter registrations.</p>
         </div>
 
@@ -97,7 +128,7 @@ export default function ApprovedVotersPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="md:w-1/3"
               />
-              <Select value={districtFilter} onValueChange={setDistrictFilter}>
+              {/* <Select value={districtFilter} onValueChange={setDistrictFilter}>
                 <SelectTrigger className="md:w-1/4">
                   <SelectValue placeholder="Filter by District" />
                 </SelectTrigger>
@@ -109,7 +140,7 @@ export default function ApprovedVotersPage() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
 
             {/* Table */}
@@ -117,7 +148,7 @@ export default function ApprovedVotersPage() {
               {isLoading ? (
                 <div>Loading voters...</div>
               ) : filteredVoters.length === 0 ? (
-                <div>No approved voters found.</div>
+                <div>No approved voters found in your grama niladhari divition.</div>
               ) : (
                 <table className="w-full border">
                   <thead>
@@ -126,6 +157,7 @@ export default function ApprovedVotersPage() {
                       <th className="p-2 text-left">NIC</th>
                       <th className="p-2 text-left">Email</th>
                       <th className="p-2 text-left">District</th>
+                      <th className="p-2 text-left">Grama Niladari Divition</th>
                       <th className="p-2 text-left">Approved At</th>
                       <th className="p-2 text-left">Actions</th>
                     </tr>
@@ -137,6 +169,7 @@ export default function ApprovedVotersPage() {
                         <td className="p-2">{voter.nic}</td>
                         <td className="p-2">{voter.user?.email || 'N/A'}</td>
                         <td className="p-2 capitalize">{voter.district || 'N/A'}</td>
+                        <td className="p-2">{voter.gramaNiladhariDivision}</td>
                         <td className="p-2">{new Date(voter.updatedAt).toLocaleDateString()}</td>
                         <td className="p-2">
                           <Button

@@ -28,6 +28,10 @@ const voterSchema = mongoose.Schema({
         enum: ['pending', 'approved', 'rejected'],
         default: 'pending',
     },
+    province: {
+        type: String,
+        required: true,
+    },
     district: {
         type: String,
         required: true,
@@ -35,6 +39,10 @@ const voterSchema = mongoose.Schema({
     gramaNiladhariDivision: {
         type: String,
         required: true,
+    },
+    localAuthority: {
+        type: String,
+        trim: true,
     },
     nicFrontPath: { type: String },
     nicBackPath: { type: String },

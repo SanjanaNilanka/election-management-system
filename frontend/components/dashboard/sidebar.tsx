@@ -28,7 +28,7 @@ export function Sidebar({ userRole }: SidebarProps) {
           { icon: Vote, label: "Vote", href: "/dashboard/citizen/voting" },
           // { icon: History, label: "Voting History", href: "/dashboard/citizen/history" },
           { icon: HelpCircle, label: "Support & Help", href: "/dashboard/citizen/support" },
-          { icon: Bell, label: "Notifications", href: "/dashboard/citizen/notifications" },
+          // { icon: Bell, label: "Notifications", href: "/dashboard/citizen/notifications" },
         ]
       case "grama_niladhari":
         return [
